@@ -126,6 +126,7 @@ const handleSubmit = () => {
   flex-direction: column;
   border-bottom: 10px solid #c8a345;
   margin-top: 2rem;
+  color: white;
 
 }
 
