@@ -1,5 +1,9 @@
 <template>
   <v-app class="containers">
+    <div v-if="!isLoaded">
+      <preloader />
+    </div>
+    <div v-else>
     <WhatsAppButton />
     <Header />
     <AboutCenter />
@@ -9,6 +13,7 @@
     <Depoimentos />
     <Contagem />
     <ContatoFooter/>
+  </div>
   </v-app>
 </template>
 
