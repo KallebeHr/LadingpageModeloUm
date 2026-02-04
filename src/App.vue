@@ -1,21 +1,26 @@
 <template>
   <v-app class="containers">
+    <VLibras position="right" />
     <div v-if="!isLoaded">
       <preloader />
-    </div> 
+    </div>
+
     <div v-else>
-    <WhatsAppButton />
-    <Header />
-    <AboutCenter />
-    <Sections />
-    <Loca />
-    <Encontrar />
-    <Depoimentos />
-    <Contagem />
-    <ContatoFooter/>
-  </div>
+      <WhatsAppButton />
+      <Header />
+      <AboutCenter />
+      <Sections />
+      <Loca />
+      <Encontrar />
+      <Depoimentos />
+      <Contagem />
+      <ContatoFooter />
+    </div>
+
+    <!-- VLibras aqui dentro -->
   </v-app>
 </template>
+
 
 <script setup>
 import AboutCenter from './components/AboutCenter.vue';

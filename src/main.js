@@ -1,20 +1,19 @@
 /**
  * main.js
  *
- * Bootstraps Vuetify and other plugins then mounts the App`
+ * Bootstraps Vuetify and other plugins then mounts the App
  */
 
-// Plugins
 import { registerPlugins } from '@/plugins'
-
-// Components
 import App from './App.vue'
-
-// Composables
+import VLibras from '@vue-a11y/vlibras'
 import { createApp } from 'vue'
 
 const app = createApp(App)
 
 registerPlugins(app)
+
+// Registrar VLibras ANTES do mount
+app.use(VLibras)
 
 app.mount('#app')
