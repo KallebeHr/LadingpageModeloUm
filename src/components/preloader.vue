@@ -1,200 +1,79 @@
 <template>
-  <div class="body" v-if="!isloaded">
-    <div class="loading-container">
-  <div class="loading-text">
-    <span>M</span>
-    <span>A</span>
-    <span>X</span>
-    <span>-</span>
-    <span>D</span>
-    <span>E</span>
-    <span>V</span>
-  </div>
-  <div class="loading-text-two">
-    <span>C</span>
-    <span>A</span>
-    <span>R</span>
-    <span>R</span>
-    <span>E</span>
-    <span>G</span>
-    <span>A</span>
-    <span>N</span>
-    <span>D</span>
-    <span>o</span>
-  </div>
-   
+  <div class='container'>
+<div class="textWrapper">
+  <p class="text">Dr. <span class="highlight">Seu Nome</span></p>
+  <div class="invertbox"></div>
 </div>
-  </div>
+<img src="/LogoPNG.png" class="logoName" alt="">
+</div>
 </template>
 
-<script>
-export default {
-    data: () => {
-      return {
-        isloaded: false
-      }
-    },
-    mounted() {
-      document.onreadystatechange = () => {
-        if (document.readyState == "complete") { 
-          this.isloaded = true;
-        } 
-      }
-    },
-  }
+<script setup>
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
-* {
-      box-sizing: border-box;
+.container{
+    display:flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
     }
+    /* From Uiverse.io by Subaashbala */ 
+/* From Uiverse.io by Uncannypotato69 */ 
+.textWrapper {
+  height: fit-content;
+  min-width: 3rem;
+  width: fit-content;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.25ch;
+  position: relative;
+  z-index: 0;
+  color: white
+}
+.logoName{
+  width: 10rem;
+}
+.highlight{
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem); /* Fonte levemente reduzida */
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 0.5rem; /* Margem reduzida */
+  text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  color: rgb(255, 0, 0);
 
-    .body {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Montserrat', sans-serif;
-    }
+}
+.invertbox {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1/1;
+  left: 0;
+  top: 0;
+  border-radius: 20%;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: invert(10%);
+  animation: move 2s ease-in-out infinite;
+  color:  rgb(255, 0, 0);
 
-    .loading-container {
-      width: 100%;
-      max-width: 520px;
-      text-align: center;
-      color: black;
-      position: relative;
-      margin: 0 32px;
-    }
+}
+.text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem); /* Fonte levemente reduzida */
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 0.5rem; /* Margem reduzida */
+  text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  color: aliceblue;
+}
+@keyframes move {
+  50% {
+    left: calc(100% - 3rem);
+  }
+}
 
-    .loading-container::before {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 3px;
-      background-color: #fff;
-      bottom: 0;
-      left: 0;
-      border-radius: 10px;
-      animation: movingLine 2.4s infinite ease-in-out;
-    }
-
-    @keyframes movingLine {
-      0% {
-        opacity: 0;
-        width: 0;
-      }
-      33.3%, 66% {
-        opacity: 0.8;
-        width: 100%;
-      }
-      85% {
-        width: 0;
-        left: initial;
-        right: 0;
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        width: 0;
-      }
-    }
-    .loading-text-two{
-      font-size: 5vw;
-      line-height: 64px;
-      letter-spacing: 10px;
-      margin-bottom: 32px;
-      display: flex;
-      align-items: end;
-      justify-content: space-evenly;
-    }
-    .loading-text {
-      font-size: 5vw;
-      line-height: 64px;
-      letter-spacing: 10px;
-      margin-bottom: 32px;
-      display: flex;
-      justify-content: space-evenly;
-    }
-
-    .loading-text,.loading-text-two span {
-      animation: moveLetters 2.4s infinite ease-in-out;
-      transform: translateX(0);
-      position: relative;
-      display: inline-block;
-      opacity: 0;
-      text-shadow: 0px 2px 10px rgba(46, 74, 81, 0.3); 
-      background: none;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(1) {
-      animation-delay: 0.1s;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(3) {
-      animation-delay: 0.3s;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(4) {
-      animation-delay: 0.4s;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(5) {
-      animation-delay: 0.5s;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(6) {
-      animation-delay: 0.6s;
-    }
-
-    .loading-text,.loading-text-two span:nth-child(7) {
-      animation-delay: 0.7s;
-    }
-    .loading-text,.loading-text-two span:nth-child(8) {
-      animation-delay: 0.8s;
-    }
-    .loading-text,.loading-text-two span:nth-child(9) {
-      animation-delay: 0.9s;
-    }
-    .loading-text,.loading-text-two span:nth-child(10) {
-      animation-delay: 1s;
-    }
-
-
-    @keyframes moveLetters {
-      0% {
-        transform: translateX(-15vw);
-        opacity: 0;
-      }
-      33.3%, 66% {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      100% {
-        transform: translateX(15vw);
-        opacity: 0;
-      }
-    }
-
-    .socials {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      display: flex;
-      align-items: center;
-    }
-
-    .social-link {
-      color: #fff;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      text-decoration: none;
-      margin-right: 12px;
-    }
 </style>

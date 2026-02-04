@@ -1,306 +1,934 @@
 <template>
-  <header :class="{ hidden: hidden }" class="navbar">
-    <div class="t">
-      <img src="../assets/logocente.png" alt="" class="logo">
-      <nav>
-        <ul v-if="!isMobile">
-          <li @click="handleClick('#home')">Home</li>
-          <li @click="handleClick('#servicos')">Serviços</li>
-          <li @click="handleClick('#equipe')">Nossa equipe</li>
-          <li @click="handleClick('#local')">local</li>
-          <li @click="handleClick('#depoimentos')">depoimentos</li>
-          <li @click="handleClick('#contatos')">contatos</li>
-        </ul>
-        <v-icon @click.stop="toggleDrawer" v-if="isMobile" style="cursor: pointer;color:black; margin-right:10px;" icon="mdi-menu" />
-      </nav>
+  <header
+    ref="headerEl"
+    class="nav"
+    :class="{ 'is-hidden': hidden, 'is-scrolled': scrolled }"
+    role="banner"
+  >
+    <!-- progress (scroll) -->
+    <div class="progress" aria-hidden="true">
+      <span class="progress__bar" :style="{ transform: `scaleX(${scrollProgress})` }"></span>
     </div>
-    <v-navigation-drawer v-model="drawer" location="right" class="menuH" temporary>
-      <v-card class="headerMenu">
-        <v-container class="test">
-          <div class="Hnav">         
-            <ul class="header-nav">
-              <li @click="handleClick('#home')">Home</li>
-              <li @click="handleClick('#servicos')">Serviços</li>
-              <li @click="handleClick('#equipe')">Nossa equipe</li>
-              <li @click="handleClick('#local')">local</li>
-              <li @click="handleClick('#depoimentos')">depoimentos</li>
-              <li @click="handleClick('#contatos')">contatos</li>
-            </ul>
-            <p>Entrar em contato</p>
-          </div>
-        </v-container>
-      </v-card>
-    </v-navigation-drawer>
 
+    <div class="nav__inner">
+      <!-- Brand -->
+      <a class="brand" href="#home" @click.prevent="handleClick('#home')" aria-label="Ir para o início">
+        <img src="/LogoPNG.png" alt="Logo do escritório" class="brand__logo" />
+        <div class="brand__text" v-if="showBrandText">
+          <span class="brand__name">Seu Escritório</span>
+          <span class="brand__tag">Advocacia • Atendimento Humanizado</span>
+        </div>
+      </a>
+
+      <!-- Desktop nav -->
+      <nav class="menu" aria-label="Navegação principal" v-if="!isMobile">
+        <button
+          v-for="item in items"
+          :key="item.id"
+          class="menu__link"
+          :class="{ 'is-active': activeId === item.id }"
+          type="button"
+          @click="handleClick(item.hash)"
+        >
+          <span class="menu__label">{{ item.label }}</span>
+          <span class="menu__dot" aria-hidden="true"></span>
+        </button>
+
+        <div class="menu__sep" aria-hidden="true"></div>
+
+        <v-btn class="cta" variant="flat" size="small" @click="openWhatsApp()">
+          Falar no WhatsApp
+          <v-icon icon="mdi-whatsapp" class="ml-2" />
+        </v-btn>
+      </nav>
+
+      <!-- Mobile button -->
+      <button
+        v-if="isMobile"
+        class="burger"
+        type="button"
+        @click="openMenu()"
+        :aria-expanded="menuOpen ? 'true' : 'false'"
+        aria-label="Abrir menu"
+      >
+        <span class="burger__icon" :class="{ 'is-open': menuOpen }" aria-hidden="true"></span>
+      </button>
+    </div>
   </header>
+
+  <!-- FULLSCREEN MENU -->
+  <v-dialog
+    v-model="menuOpen"
+    fullscreen
+    scrollable
+    attach="body"
+    transition="fade-transition"
+    content-class="fsDialog"
+    @update:modelValue="onDialogToggle"
+  >
+    <div ref="fsRoot" class="fs" role="dialog" aria-modal="true" aria-label="Menu de navegação">
+      <!-- BG -->
+      <div class="fs__bg" aria-hidden="true">
+        <div class="fs__grid"></div>
+        <div class="fs__glow fs__glow--a"></div>
+        <div class="fs__glow fs__glow--b"></div>
+        <div class="fs__noise"></div>
+      </div>
+
+      <!-- Topbar fixa -->
+      <div class="fs__top">
+        <div class="fs__brand">
+          <img src="/LogoPNG.png" alt="Logo do escritório" class="fs__logo" />
+          <div class="fs__brandTxt">
+            <strong>Seu Escritório</strong>
+            <span>Atendimento estratégico e confidencial</span>
+          </div>
+        </div>
+
+        <div class="fs__topActions">
+          <v-btn class="fs__topBtn" variant="outlined" @click="openWhatsApp()">
+            WhatsApp
+            <v-icon icon="mdi-whatsapp" class="ml-2" />
+          </v-btn>
+
+          <button class="fs__close" type="button" @click="closeMenu()" aria-label="Fechar menu">
+            <v-icon icon="mdi-close" />
+          </button>
+        </div>
+      </div>
+
+      <!-- ✅ Scroll acontece aqui -->
+      <div ref="fsScroll" class="fs__scroll" aria-label="Conteúdo do menu">
+        <!-- fades (indicam conteúdo acima/abaixo) -->
+        <div class="fs__fadeTop" aria-hidden="true"></div>
+        <div class="fs__fadeBottom" aria-hidden="true"></div>
+
+        <div class="fs__wrap">
+          <!-- Left -->
+          <aside class="fs__left">
+            <div class="fs__kicker" data-anim="kicker">
+              <span class="pill">
+                <span class="dot" aria-hidden="true"></span>
+                Navegação rápida
+              </span>
+              <span class="mini">• Clara • Direta • Sem enrolação</span>
+            </div>
+
+            <h2 class="fs__title" data-anim="title">Para onde você quer ir?</h2>
+
+            <p class="fs__subtitle" data-anim="subtitle">
+              Escolha uma seção e eu te levo direto — sem travar, sem rolar perdido.
+            </p>
+
+            <v-text-field
+              v-model="q"
+              class="fs__search"
+              density="comfortable"
+              variant="outlined"
+              hide-details
+              label="Buscar seção (ex: serviços, equipe...)"
+              prepend-inner-icon="mdi-magnify"
+              @keydown.esc="closeMenu()"
+              data-anim="search"
+            />
+
+            <div class="fs__chips" aria-label="Atalhos" data-anim="chips">
+              <button class="chip" type="button" @click="jump('#servicos')">
+                <v-icon icon="mdi-briefcase-outline" />
+                Serviços
+              </button>
+              <button class="chip" type="button" @click="jump('#depoimentos')">
+                <v-icon icon="mdi-star-outline" />
+                Depoimentos
+              </button>
+              <button class="chip" type="button" @click="jump('#contatos')">
+                <v-icon icon="mdi-phone-outline" />
+                Contato
+              </button>
+            </div>
+
+            <div class="fs__ctaBox" data-anim="cta">
+              <div class="fs__ctaText">
+                <strong>Quer atendimento agora?</strong>
+                <span>Chame no WhatsApp e receba orientação inicial.</span>
+              </div>
+
+              <v-btn class="fs__ctaBtn" variant="flat" @click="openWhatsApp()">
+                Entrar em contato
+                <v-icon icon="mdi-whatsapp" class="ml-2" />
+              </v-btn>
+
+              <p class="fs__note">Resposta em horário comercial • Sem compromisso</p>
+            </div>
+
+            <div class="fs__tips" data-anim="tips">
+              <div class="tip">
+                <v-icon icon="mdi-lock-outline" />
+                <div>
+                  <strong>Sigilo</strong>
+                  <span>Informações tratadas com confidencialidade.</span>
+                </div>
+              </div>
+              <div class="tip">
+                <v-icon icon="mdi-lightning-bolt-outline" />
+                <div>
+                  <strong>Agilidade</strong>
+                  <span>Triagem rápida e encaminhamento claro.</span>
+                </div>
+              </div>
+              <div class="tip">
+                <v-icon icon="mdi-scale-balance" />
+                <div>
+                  <strong>Estratégia</strong>
+                  <span>Atuação objetiva com foco no resultado.</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Right -->
+          <main class="fs__right" aria-label="Lista de seções">
+            <div class="fs__sectionLabel" data-anim="label">
+              <span class="labelDot" aria-hidden="true"></span>
+              Seções do site
+            </div>
+
+            <div class="fs__gridMenu">
+              <button
+                v-for="item in filteredItems"
+                :key="item.id"
+                class="fs__item"
+                :class="{ 'is-active': activeId === item.id }"
+                type="button"
+                @click="jump(item.hash)"
+                data-anim="item"
+              >
+                <div class="fs__itemIcon" aria-hidden="true">
+                  <v-icon :icon="item.icon" />
+                </div>
+
+                <div class="fs__itemTxt">
+                  <strong>{{ item.label }}</strong>
+                  <span>{{ item.desc }}</span>
+                </div>
+
+                <div class="fs__itemArrow" aria-hidden="true">
+                  <v-icon icon="mdi-arrow-top-right" />
+                </div>
+
+                <div class="fs__itemGlow" aria-hidden="true"></div>
+              </button>
+            </div>
+
+            <div class="fs__bottom" data-anim="bottom">
+              <div class="fs__mini">
+                <button class="miniBtn" type="button" @click="openLink('https://instagram.com')" aria-label="Instagram">
+                  <v-icon icon="mdi-instagram" />
+                </button>
+                <button class="miniBtn" type="button" @click="openLink('https://linkedin.com')" aria-label="LinkedIn">
+                  <v-icon icon="mdi-linkedin" />
+                </button>
+                <button class="miniBtn" type="button" @click="openEmail()" aria-label="E-mail">
+                  <v-icon icon="mdi-email-outline" />
+                </button>
+              </div>
+
+              <div class="fs__legal">
+                <span>Site seguro • Navegação criptografada</span>
+                <span class="sep">•</span>
+                <span>Atendimento humanizado</span>
+              </div>
+            </div>
+
+            <div class="fs__spacer" aria-hidden="true"></div>
+          </main>
+        </div>
+      </div>
+    </div>
+  </v-dialog>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import SvgIcon from '@jamescoyle/vue-icon';
-import { useGoTo } from 'vuetify';
-import { mdiPhone, mdiEmailOutline, mdiClockTimeEightOutline, mdiLinkedin, mdiInstagram } from '@mdi/js';
+import { ref, onMounted, onUnmounted, onBeforeUnmount, computed, nextTick, watch } from "vue";
+import { useGoTo } from "vuetify";
 
-const hidden = ref(false); // Controla se o header está visível ou não
-let lastScrollTop = 0; // Armazena a última posição do scroll
-const isMobile = ref(false); // Verifica se a tela é mobile
-const drawer = ref(false); // Controla se o menu mobile está aberto
 const goTo = useGoTo();
 
-// Verifica o tamanho da tela para definir se é mobile
-const handleWindowSizeChange = () => {
-  isMobile.value = window.innerWidth <= 1030;
-};
+const headerEl = ref(null);
+const hidden = ref(false);
+const scrolled = ref(false);
+const isMobile = ref(false);
+const lastScrollTop = ref(0);
+const scrollProgress = ref(0);
+const activeId = ref("home");
 
-// Lógica para esconder ou mostrar o header ao rolar a página
-const handleScroll = () => {
-  const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+const menuOpen = ref(false);
+const fsRoot = ref(null);
+const fsScroll = ref(null);
 
-  if (currentScrollTop > lastScrollTop && currentScrollTop > 50) {
-    // Rolando para baixo e passou de 50px
-    hidden.value = true;
-  } else if (currentScrollTop < lastScrollTop) {
-    // Rolando para cima
-    hidden.value = false;
-  }
+const q = ref("");
 
-  lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop; // Evita valores negativos
-};
+/** GSAP (npm i gsap) */
+let gsap = null;
+let openTl = null;
+let closeTl = null;
+const isUnmounted = ref(false);
 
-// Abre ou fecha o menu mobile
-const toggleDrawer = () => {
-  drawer.value = !drawer.value;
-};
-
-// Navega para uma seção da página
-const handleClick = (id) => {
-  goTo(id);
-  drawer.value = false; // Fecha o menu mobile ao clicar em um item
-};
-
-// Adiciona os listeners ao montar o componente
-onMounted(() => {
-  handleWindowSizeChange();
-  window.addEventListener('resize', handleWindowSizeChange);
-  window.addEventListener('scroll', handleScroll);
+onBeforeUnmount(() => {
+  isUnmounted.value = true;
+  try { openTl?.kill(); } catch (_) {}
+  try { closeTl?.kill(); } catch (_) {}
 });
 
-// Remove os listeners ao desmontar o componente
+const items = [
+  { id: "home", label: "Home", hash: "#home", icon: "mdi-home-outline", desc: "Visão geral e contato rápido." },
+  { id: "servicos", label: "Serviços", hash: "#servicos", icon: "mdi-briefcase-outline", desc: "Áreas e atuação do escritório." },
+  { id: "equipe", label: "Equipe", hash: "#equipe", icon: "mdi-account-group-outline", desc: "Profissionais e especialidades." },
+  { id: "local", label: "Local", hash: "#local", icon: "mdi-map-marker-outline", desc: "Endereço e como chegar." },
+  { id: "depoimentos", label: "Depoimentos", hash: "#depoimentos", icon: "mdi-star-outline", desc: "Avaliações e reputação." },
+  { id: "contatos", label: "Contato", hash: "#contatos", icon: "mdi-phone-outline", desc: "Canais oficiais e redes." }
+];
+
+const filteredItems = computed(() => {
+  const term = (q.value || "").trim().toLowerCase();
+  if (!term) return items;
+  return items.filter((i) => (i.label + " " + i.desc).toLowerCase().includes(term));
+});
+
+const showBrandText = computed(() => !isMobile.value);
+
+function reduceMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+}
+
+function handleWindowSizeChange() {
+  isMobile.value = window.innerWidth <= 1030;
+}
+
+function headerHeight() {
+  return headerEl.value?.offsetHeight || 72;
+}
+
+function handleClick(hash) {
+  goTo(hash, {
+    duration: 650,
+    offset: -Math.round(headerHeight() + 10),
+    easing: "easeInOutCubic"
+  });
+}
+
+function jump(hash) {
+  // fecha com animação segura e só depois navega
+  closeMenu(() => handleClick(hash));
+}
+
+function handleScroll() {
+  const st = window.pageYOffset || document.documentElement.scrollTop;
+  const doc = document.documentElement;
+  const max = Math.max(1, doc.scrollHeight - doc.clientHeight);
+
+  scrollProgress.value = Math.min(1, Math.max(0, st / max));
+  scrolled.value = st > 8;
+
+  const goingDown = st > lastScrollTop.value;
+  if (goingDown && st > 120 && !menuOpen.value) hidden.value = true;
+  if (!goingDown) hidden.value = false;
+
+  lastScrollTop.value = st <= 0 ? 0 : st;
+}
+
+function setActiveByIntersection() {
+  const els = items.map((i) => document.getElementById(i.id)).filter(Boolean);
+  if (!els.length) return () => {};
+
+  const obs = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => (b.intersectionRatio || 0) - (a.intersectionRatio || 0))[0];
+      if (visible?.target?.id) activeId.value = visible.target.id;
+    },
+    {
+      root: null,
+      rootMargin: `-${Math.round(headerHeight() + 20)}px 0px -60% 0px`,
+      threshold: [0.12, 0.2, 0.35, 0.5, 0.7]
+    }
+  );
+
+  els.forEach((el) => obs.observe(el));
+  return () => obs.disconnect();
+}
+
+function openWhatsApp() {
+  const phone = "5581999999999";
+  const text = "Olá, vim através do site. Podemos conversar?";
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+}
+function openEmail() {
+  window.location.href = "mailto:contato@seuescritorio.com.br";
+}
+function openLink(url) {
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/* ===== Fullscreen Menu ===== */
+function openMenu() {
+  menuOpen.value = true;
+  hidden.value = false;
+}
+
+function closeMenu(after) {
+  // ✅ fecha seguro (evita insertBefore null)
+  if (isUnmounted.value) return;
+
+  const root = fsRoot.value;
+
+  // mata timeline anterior
+  try { closeTl?.kill(); } catch (_) {}
+  closeTl = null;
+
+  // se não tem root (ou já saiu do DOM), fecha direto
+  if (!root || !root.isConnected || !gsap || reduceMotion()) {
+    menuOpen.value = false;
+    after?.();
+    return;
+  }
+
+  const itemsEls = root.querySelectorAll('[data-anim="item"]');
+  const fadeEls = root.querySelectorAll(
+    '[data-anim="bottom"],[data-anim="cta"],[data-anim="search"],[data-anim="subtitle"],[data-anim="title"],[data-anim="kicker"],[data-anim="chips"],[data-anim="label"],[data-anim="tips"]'
+  );
+
+  closeTl = gsap.timeline({
+    defaults: { ease: "power3.inOut", duration: 0.28 },
+    onComplete: () => {
+      closeTl = null;
+      // ✅ GARANTE que ainda existe
+      if (isUnmounted.value) return;
+      if (!fsRoot.value || !fsRoot.value.isConnected) return;
+
+      menuOpen.value = false;
+      after?.();
+    }
+  });
+
+  closeTl.to(itemsEls, { y: 10, opacity: 0, stagger: 0.015 }, 0);
+  closeTl.to(fadeEls, { y: 8, opacity: 0 }, 0.03);
+  closeTl.to(root, { opacity: 0 }, 0.08);
+}
+
+/** body lock (não rola o site atrás) */
+watch(menuOpen, (val) => {
+  const el = document.documentElement;
+  el.style.overflow = val ? "hidden" : "";
+});
+
+async function ensureGsap() {
+  if (gsap) return;
+  try {
+    const mod = await import("gsap");
+    gsap = mod.gsap || mod.default || mod;
+  } catch (_) {
+    gsap = null;
+  }
+}
+
+async function runOpenAnim() {
+  const root = fsRoot.value;
+  if (!root || !root.isConnected) return;
+  if (!gsap || reduceMotion()) return;
+
+  // scroll pro topo ao abrir (garante que você vê o início)
+  fsScroll.value?.scrollTo?.({ top: 0, behavior: "auto" });
+
+  try { openTl?.kill(); } catch (_) {}
+  openTl = null;
+
+  const itemsEls = root.querySelectorAll('[data-anim="item"]');
+  const fadeEls = root.querySelectorAll(
+    '[data-anim="kicker"],[data-anim="title"],[data-anim="subtitle"],[data-anim="search"],[data-anim="chips"],[data-anim="cta"],[data-anim="label"],[data-anim="tips"],[data-anim="bottom"]'
+  );
+
+  gsap.set(root, { opacity: 1 });
+  gsap.set(fadeEls, { opacity: 0, y: 10, filter: "blur(8px)" });
+  gsap.set(itemsEls, { opacity: 0, y: 14, filter: "blur(10px)" });
+
+  openTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  openTl.fromTo(root, { opacity: 0 }, { opacity: 1, duration: 0.22 });
+
+  openTl.to(root.querySelectorAll('[data-anim="kicker"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.28 }, 0.06);
+  openTl.to(root.querySelectorAll('[data-anim="title"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.34 }, 0.10);
+  openTl.to(root.querySelectorAll('[data-anim="subtitle"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.34 }, 0.14);
+  openTl.to(root.querySelectorAll('[data-anim="search"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.30 }, 0.18);
+  openTl.to(root.querySelectorAll('[data-anim="chips"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.28 }, 0.22);
+  openTl.to(root.querySelectorAll('[data-anim="cta"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.28 }, 0.26);
+  openTl.to(root.querySelectorAll('[data-anim="tips"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.28 }, 0.28);
+
+  openTl.to(root.querySelectorAll('[data-anim="label"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.26 }, 0.22);
+
+  openTl.to(itemsEls, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.34, stagger: 0.05 }, 0.28);
+  openTl.to(root.querySelectorAll('[data-anim="bottom"]'), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.26 }, 0.44);
+}
+
+/** chamado quando dialog abre/fecha */
+async function onDialogToggle(val) {
+  if (!val) return;
+  await nextTick();
+  await ensureGsap();
+  await nextTick();
+  runOpenAnim();
+}
+
+let cleanupIntersection = () => {};
+
+onMounted(async () => {
+  handleWindowSizeChange();
+  window.addEventListener("resize", handleWindowSizeChange, { passive: true });
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  handleScroll();
+
+  await nextTick();
+  cleanupIntersection = setActiveByIntersection();
+});
+
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll);
-  window.removeEventListener('resize', handleWindowSizeChange);
+  window.removeEventListener("resize", handleWindowSizeChange);
+  window.removeEventListener("scroll", handleScroll);
+  cleanupIntersection?.();
+  document.documentElement.style.overflow = "";
 });
 </script>
 
 <style scoped>
-.t {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; 
-  width: 100%;
-}
+/* =======================
+   Header minimal
+======================= */
+.nav {
+  --bg: #f3f3f3;
+  --bg-2: rgba(255, 255, 255, 0.92);
+  --text: #0f172a;
+  --muted: rgba(15, 23, 42, 0.65);
+  --line: rgba(15, 23, 42, 0.10);
+  --gold: #c8a345;
 
-header {
   position: fixed;
-  top: 0;
+  top: 0; left: 0; right: 0;
+  z-index: 2000;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  transition: top .45s cubic-bezier(.2,.8,.2,1), background .25s ease, box-shadow .25s ease;
+}
+.nav.is-scrolled { background: var(--bg-2); box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08); }
+.nav.is-hidden { top: -110px; }
+
+.progress { height: 2px; width: 100%; }
+.progress__bar {
+  display: block; height: 100%; width: 100%;
+  transform-origin: left;
+  background: linear-gradient(90deg, rgba(200,163,69,.25), rgba(200,163,69,.9));
+}
+.nav__inner {
+  height: 72px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); min-width: 220px; }
+.brand__logo { height: 44px; border-radius: 10px; display: block; }
+.brand__text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand__name { font-weight: 700; font-size: 14px; }
+.brand__tag { margin-top: 2px; font-size: 12px; color: var(--muted); }
+
+.menu { display: flex; align-items: center; gap: 8px; }
+.menu__link {
+  background: transparent; border: 0; cursor: pointer;
+  padding: 10px 10px; border-radius: 12px;
+  color: rgba(15, 23, 42, 0.78);
+  font-weight: 550; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background .2s ease, color .2s ease, transform .2s ease;
+}
+.menu__link:hover { background: rgba(15, 23, 42, 0.06); color: var(--text); transform: translateY(-1px); }
+.menu__link.is-active { color: var(--text); background: rgba(200, 163, 69, 0.10); }
+.menu__dot { width: 6px; height: 6px; border-radius: 999px; background: transparent; transition: .2s; }
+.menu__link.is-active .menu__dot { background: var(--gold); transform: scale(1.05); }
+.menu__sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px 0 6px; }
+
+.cta {
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  background: linear-gradient(90deg, rgba(15,23,42,.95), rgba(15,23,42,.78)) !important;
+  color: white !important;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.18) !important;
+}
+
+.burger {
+  width: 46px; height: 42px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.burger__icon {
+  width: 18px; height: 2px;
+  background: var(--text);
+  border-radius: 999px;
+  position: relative;
+  display: block;
+}
+.burger__icon::before,
+.burger__icon::after {
+  content: "";
+  position: absolute;
   left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: column;
+  width: 18px; height: 2px;
+  background: var(--text);
+  border-radius: 999px;
+  transition: transform .25s ease, top .25s ease;
+}
+.burger__icon::before { top: -6px; }
+.burger__icon::after { top: 6px; }
+.burger__icon.is-open { background: transparent; }
+.burger__icon.is-open::before { top: 0; transform: rotate(45deg); }
+.burger__icon.is-open::after { top: 0; transform: rotate(-45deg); }
+
+/* =======================
+   Fullscreen dialog
+======================= */
+:deep(.fsDialog) {
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.fs {
+  position: relative;
   width: 100%;
-  color: #979797;
-  background: #fffbff;
-  z-index: 1000;
-  transition: top 0.6s ease-in-out;
+  height: 100vh;
+  overflow: hidden;
+  --gold: #c8a345;
+  --txt: rgba(255,255,255,0.92);
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(2, 6, 23, 0.86));
+  color: var(--txt);
 }
 
-.hidden {
-  top: -8rem; /* Esconde o header movendo-o para cima */
+/* BG */
+.fs__bg { position: absolute; inset: 0; z-index: 0; }
+.fs__grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px);
+  background-size: 68px 68px;
+  opacity: 0.22;
+  mask-image: radial-gradient(900px 500px at 20% 10%, black, transparent 70%);
+}
+.fs__glow {
+  position: absolute; width: 720px; height: 720px;
+  border-radius: 999px;
+  filter: blur(26px);
+  opacity: 0.75;
+}
+.fs__glow--a { left: -240px; top: -260px; background: radial-gradient(circle at 30% 30%, rgba(200,163,69,0.24), transparent 60%); }
+.fs__glow--b { right: -280px; bottom: -340px; background: radial-gradient(circle at 30% 30%, rgba(200,163,69,0.18), transparent 60%); }
+.fs__noise {
+  position: absolute; inset: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
 }
 
-.logo {
-  height: 4.5rem;
-  padding: 10px;
-}
-
-header h1 {
-  margin: 10px;
-  font-size: 2rem;
-}
-
-header nav ul {
-  list-style: none;
+/* Topbar fixa */
+.fs__top {
+  position: relative;
+  z-index: 2;
+  height: 72px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 10px;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-header nav ul li {
-  margin-right: 60px;
+.fs__brand { display: flex; align-items: center; gap: 12px; }
+.fs__logo {
+  height: 46px; width: 46px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  padding: 6px;
+  object-fit: contain;
+}
+.fs__brandTxt strong { display: block; font-weight: 950; letter-spacing: .2px; }
+.fs__brandTxt span { display: block; margin-top: 2px; font-size: 12px; color: rgba(255,255,255,0.70); }
+
+.fs__topActions { display: flex; align-items: center; gap: 10px; }
+.fs__topBtn {
+  border-radius: 16px !important;
+  text-transform: none !important;
+  font-weight: 800 !important;
+  border-color: rgba(255,255,255,0.18) !important;
+  color: rgba(255,255,255,0.92) !important;
+}
+.fs__close {
+  width: 46px; height: 46px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
   cursor: pointer;
-  font-family: "Inknut Antiqua", serif;
-  text-align: center;
-  transition: 0.4s;
-  color: black;
-  font-weight: 300;
 }
 
-header nav ul li:hover {
-  color: #c8a345;
+/* ✅ Scroll real */
+.fs__scroll {
+  position: relative;
+  z-index: 2;
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 0 0;
 }
 
-.headerAbout {
+/* fades */
+.fs__fadeTop,
+.fs__fadeBottom {
+  position: sticky;
+  left: 0; right: 0;
+  height: 18px;
+  pointer-events: none;
+  z-index: 3;
+}
+.fs__fadeTop {
+  top: 0;
+  background: linear-gradient(180deg, rgba(2,6,23,0.95), rgba(2,6,23,0));
+  opacity: 1;
+}
+.fs__fadeBottom {
+  bottom: 0;
+  background: linear-gradient(0deg, rgba(2,6,23,0.95), rgba(2,6,23,0));
+  opacity: 1;
+}
+
+.fs__wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 18px 22px;
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 18px;
+}
+
+.fs__left {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  border-radius: 22px;
+  padding: 18px;
+  backdrop-filter: blur(12px);
+}
+
+.fs__kicker { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  font-weight: 800;
+  font-size: 12px;
+}
+.dot { width: 8px; height: 8px; border-radius: 999px; background: var(--gold); box-shadow: 0 0 0 6px rgba(200,163,69,.12); }
+.mini { font-size: 12px; color: rgba(255,255,255,0.72); }
+
+.fs__title {
+  margin: 0;
+  font-weight: 980;
+  letter-spacing: -0.4px;
+  line-height: 1.08;
+  font-size: clamp(22px, 2.6vw, 34px);
+}
+.fs__subtitle { margin: 10px 0 14px; color: rgba(255,255,255,0.78); line-height: 1.6; font-size: 14px; }
+
+.fs__search { margin-top: 6px; }
+.fs__search :deep(.v-field) {
+  border-radius: 18px !important;
+  background: rgba(0,0,0,0.18) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
+.fs__search :deep(.v-label),
+.fs__search :deep(.v-icon) { color: rgba(255,255,255,0.72) !important; }
+.fs__search :deep(input) { color: rgba(255,255,255,0.92) !important; }
+
+.fs__chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.chip {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.90);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-weight: 850;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.chip:hover { transform: translateY(-1px); border-color: rgba(200,163,69,0.35); background: rgba(255,255,255,0.08); }
+
+.fs__ctaBox {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(200,163,69,0.18);
+  background: radial-gradient(800px 400px at 20% 0%, rgba(200,163,69,0.18), transparent 55%), rgba(255,255,255,0.06);
+}
+.fs__ctaText strong { display: block; font-weight: 950; }
+.fs__ctaText span { display: block; margin-top: 4px; font-size: 12.5px; color: rgba(255,255,255,0.75); line-height: 1.45; }
+.fs__ctaBtn {
+  margin-top: 12px;
+  border-radius: 18px !important;
+  font-weight: 950 !important;
+  text-transform: none !important;
+  background: linear-gradient(90deg, rgba(200,163,69,0.95), rgba(200,163,69,0.72)) !important;
+  color: #0b1220 !important;
+}
+.fs__note { margin: 10px 0 0; font-size: 12px; color: rgba(255,255,255,0.70); }
+
+.fs__tips { margin-top: 12px; display: grid; gap: 10px; }
+.tip {
+  display: flex; gap: 10px; align-items: flex-start;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.14);
+  padding: 12px;
+}
+.tip :deep(.v-icon) { color: var(--gold); margin-top: 2px; }
+.tip strong { display: block; font-weight: 950; }
+.tip span { display: block; margin-top: 2px; font-size: 12px; color: rgba(255,255,255,0.75); }
+
+/* right */
+.fs__right { border-radius: 22px; padding: 10px 6px 0; }
+
+.fs__sectionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.72);
+  margin: 10px 10px 12px;
+}
+.labelDot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--gold);
+  box-shadow: 0 0 0 6px rgba(200,163,69,.10);
+}
+
+.fs__gridMenu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 6px;
+}
+
+.fs__item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  padding: 16px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  height: 3.5rem;
-  color: #4d4d4d;
-  background: #fffbff;
-  box-shadow: inset 0px -8px 20px 2px rgb(0 0 0 / 30%);
+  gap: 12px;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.fs__item:hover { transform: translateY(-2px); border-color: rgba(200,163,69,0.32); background: rgba(255,255,255,0.08); }
+.fs__item.is-active { border-color: rgba(200,163,69,0.55); background: rgba(200,163,69,0.10); }
+
+.fs__itemIcon {
+  width: 44px; height: 44px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.fs__itemIcon :deep(.v-icon) {
+  color: var(--gold);
+  font-size: 22px;
+  filter: drop-shadow(0 10px 22px rgba(200,163,69,0.18));
 }
 
-.v-navigation-drawer__scrim {
-  height: 45rem;
-}
+.fs__itemTxt { text-align: left; flex: 1; }
+.fs__itemTxt strong { display: block; font-weight: 950; font-size: 14px; }
+.fs__itemTxt span { display: block; margin-top: 3px; font-size: 12px; color: rgba(255,255,255,0.75); line-height: 1.35; }
 
-.headerMenu {
+.fs__itemArrow { opacity: .9; }
+.fs__itemGlow {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(circle at 25% 25%, rgba(200,163,69,0.18), transparent 55%);
+  filter: blur(14px);
+  opacity: 0.0;
+  transition: opacity .2s ease;
+  pointer-events: none;
+}
+.fs__item:hover .fs__itemGlow { opacity: 1; }
+
+.fs__bottom {
   display: flex;
-  justify-content: center;
-  height: 100%;
-}
-
-.Hnav {
-  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  height: 100%;
-  flex-direction: column;
+  gap: 12px;
+  padding: 14px 10px 18px;
+  color: rgba(255,255,255,0.72);
 }
-
-
-.header-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  list-style: none;
-  margin-top: 1rem;
-}
-
-.header-nav li {
-  font-size: 1rem;
-  color: #d8d8d8;
-  width: 13rem;
-  letter-spacing: 1px;
-  font-weight: 900;
-  background: #636363;
-  margin: 5px;
-  padding: 10px;
-  border-radius: 10px;
-  text-align: center;
+.fs__mini { display: flex; gap: 10px; }
+.miniBtn {
+  width: 46px; height: 46px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
   cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: rgba(255,255,255,0.92);
 }
+.fs__legal { font-size: 12px; display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fs__legal .sep { opacity: 0.7; }
+.fs__spacer { height: 22px; }
 
-.icon {
-  cursor: pointer;
+/* Responsive */
+@media (max-width: 1024px) {
+  .fs__wrap { grid-template-columns: 1fr; }
+  .fs__gridMenu { grid-template-columns: 1fr; }
 }
-
-.duvidas {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  height: 4rem;
-  background: #65746D;
-  color: #ffffff;
-  margin: 0px;
-  padding: 10px;
-  cursor: pointer;
+@media (max-width: 560px) {
+  .fs__topBtn { display: none; }
+  .fs__top { height: 68px; }
+  .fs__scroll { height: calc(100vh - 68px); }
 }
-/* Estilo do menu hamburger */
-.menuH {
-  background-color: rgba(255, 255, 255, 0.95); /* Fundo semi-transparente */
-  backdrop-filter: blur(10px); /* Efeito de desfoque */
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
-}
-
-.menuH .headerMenu {
-  background-color: transparent; /* Fundo transparente */
-}
-
-.menuH .Hnav {
-  padding: 20px;
-}
-
-.menuH .header-nav li {
-  background-color: #c8a345; /* Cor de fundo dos itens */
-  color: #fff; /* Cor do texto */
-  margin: 10px 0;
-  padding: 15px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.menuH .header-nav li:hover {
-  background-color: #b38f3a; /* Cor de fundo ao passar o mouse */
-  transform: translateX(5px); /* Efeito de deslocamento */
-}
-
-.menuH .Hnav p {
-  background-color: #65746D; /* Cor de fundo do botão de contato */
-  color: #fff; /* Cor do texto */
-  padding: 15px;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.menuH .Hnav p:hover {
-  background-color: #556b64; /* Cor de fundo ao passar o mouse */
-}
-/* Dispositivos pequenos (celulares em modo retrato e menores) */
-@media (max-width: 600px) {
-  .headerAbout-p p {
-    display: flex;
-    align-items: center;
-    margin: 5px;
-    height: 100%;
-    font-size: .6rem;
-  }
-}
-
-/* Dispositivos médios (celulares em modo paisagem e tablets em modo retrato) */
-@media (min-width: 601px) and (max-width: 768px) {
-  .headerAbout-p p {
-    display: flex;
-    align-items: center;
-    margin: 5px;
-    height: 100%;
-    font-size: .6rem;
-  }
-}
-
-/* Dispositivos médios a grandes (tablets em modo paisagem e pequenos desktops) */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .hidden {
-    top: -9rem; /* Ajuste conforme necessário para a altura da sua navbar */
-  }
-}
-
-/* Dispositivos grandes (laptops e desktops) */
-@media (min-width: 1025px) and (max-width: 1200px) {
-  .hidden {
-    top: -10rem; /* Ajuste conforme necessário para a altura da sua navbar */
-  }
-}
-
-/* Dispositivos extragrandes (desktops grandes) */
-@media (min-width: 1201px) {
-  .hidden {
-    top: -10.5rem; /* Ajuste conforme necessário para a altura da sua navbar */
-  }
+@media (prefers-reduced-motion: reduce) {
+  .chip, .fs__item, .burger, .menu__link { transition: none !important; }
 }
 </style>

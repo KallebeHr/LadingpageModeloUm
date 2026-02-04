@@ -2,7 +2,7 @@
   <v-app class="containers">
     <div v-if="!isLoaded">
       <preloader />
-    </div>
+    </div> 
     <div v-else>
     <WhatsAppButton />
     <Header />
