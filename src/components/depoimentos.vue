@@ -60,7 +60,6 @@
               Facebook
             </a>
           </div>
-          <p class="socialHint">*Troque os href pelos links reais.</p>
         </div>
       </header>
 

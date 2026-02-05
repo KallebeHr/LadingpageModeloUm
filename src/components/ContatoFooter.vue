@@ -374,7 +374,7 @@ onUnmounted(() => {
 <style scoped>
 .footer {
   position: relative;
-  padding: 86px 0 54px;
+  padding:  0 ;
   overflow: hidden;
 
   --gold: #c8a345;

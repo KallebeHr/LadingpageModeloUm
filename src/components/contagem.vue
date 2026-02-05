@@ -65,10 +65,6 @@
           </button>
         </div>
 
-        <p class="note" data-anim="note">
-          *Número ilustrativo para comunicação institucional. Ajuste o valor final conforme seus dados reais.
-        </p>
-
         <span class="borderGlow" aria-hidden="true"></span>
       </div>
     </v-container>
