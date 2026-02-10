@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AboutCenter: typeof import('./src/components/AboutCenter.vue')['default']
+    Autoscroll: typeof import('./src/components/autoscroll.vue')['default']
     Contagem: typeof import('./src/components/contagem.vue')['default']
     ContatoFooter: typeof import('./src/components/ContatoFooter.vue')['default']
     Depoimentos: typeof import('./src/components/depoimentos.vue')['default']

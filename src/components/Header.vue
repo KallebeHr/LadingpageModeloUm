@@ -15,7 +15,7 @@
       <a class="brand" href="#home" @click.prevent="handleClick('#home')" aria-label="Ir para o início">
         <img src="/LogoPNG.png" alt="Logo do escritório" class="brand__logo" />
         <div class="brand__text" v-if="showBrandText">
-          <span class="brand__name">Seu Escritório</span>
+          <span class="brand__name">Max Sistemas</span>
           <span class="brand__tag">Advocacia • Atendimento Humanizado</span>
         </div>
       </a>

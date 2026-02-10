@@ -41,6 +41,7 @@
             <span>Agilidade na Solução</span>
           </li>
         </ul>
+
       </header>
 
       <!-- Slider -->
@@ -135,8 +136,10 @@
         <p class="hint" data-anim="hint">
           Dica: passe o mouse (desktop) ou toque no card (mobile) para ver mais.
         </p>
+        
       </div>
     </div>
+    <autoscroll />
   </section>
 </template>
 
